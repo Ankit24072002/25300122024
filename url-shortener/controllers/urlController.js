@@ -1,12 +1,10 @@
 const { nanoid } = require("nanoid");
 const dayjs = require("dayjs");
 
-let urlDatabase = {}; // In-memory store
-
-// Create Short URL
+let urlDatabase = {}; 
 const createShortUrl = (req, res) => {
     try {
-        const { url, validity, shortcode } = req.body;
+        const { url, validity, shortcode, email, name, rollNo, accessCode, clientID, clientSecret } = req.body;
         if (!url || !/^https?:\/\/.+/i.test(url)) {
             return res.status(400).json({ message: "Invalid URL format" });
         }
@@ -16,25 +14,36 @@ const createShortUrl = (req, res) => {
             return res.status(409).json({ message: "Shortcode already exists" });
         }
 
-        const expiryTime = dayjs().add(validity || 30, "minute").toISOString();
+        const expiryTime = dayjs().add(validity ?? 30, "minute").toISOString();
 
         urlDatabase[code] = {
             originalUrl: url,
             createdAt: new Date().toISOString(),
             expiry: expiryTime,
-            clicks: []
+            clicks: [],
+            email,
+            name,
+            rollNo,
+            accessCode,
+            clientID,
+            clientSecret
         };
 
         return res.status(201).json({
             shortLink: `http://localhost:5000/${code}`,
-            expiry: expiryTime
+            expiry: expiryTime,
+            email,
+            name,
+            rollNo,
+            accessCode,
+            clientID,
+            clientSecret
         });
     } catch (error) {
         return res.status(500).json({ message: "Server error" });
     }
 };
 
-// Redirect to original URL
 const redirectUrl = (req, res) => {
     const { code } = req.params;
     const entry = urlDatabase[code];
@@ -56,7 +65,6 @@ const redirectUrl = (req, res) => {
     return res.redirect(entry.originalUrl);
 };
 
-// Retrieve statistics
 const getStats = (req, res) => {
     const { code } = req.params;
     const entry = urlDatabase[code];
@@ -70,8 +78,14 @@ const getStats = (req, res) => {
         createdAt: entry.createdAt,
         expiry: entry.expiry,
         totalClicks: entry.clicks.length,
-        clickDetails: entry.clicks
+        clickDetails: entry.clicks,
+        email: entry.email,
+        name: entry.name,
+        rollNo: entry.rollNo,
+        accessCode: entry.accessCode,
+        clientID: entry.clientID,
+        clientSecret: entry.clientSecret
     });
 };
 
-module.exports = { createShortUrl, redirectUrl, getStats };
+module.exports = { createShortUrl, redirectUrl,
