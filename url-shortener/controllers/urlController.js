@@ -1,10 +1,12 @@
 const { nanoid } = require("nanoid");
 const dayjs = require("dayjs");
 
-let urlDatabase = {}; 
+let urlDatabase = {};
+
 const createShortUrl = (req, res) => {
     try {
         const { url, validity, shortcode, email, name, rollNo, accessCode, clientID, clientSecret } = req.body;
+
         if (!url || !/^https?:\/\/.+/i.test(url)) {
             return res.status(400).json({ message: "Invalid URL format" });
         }
@@ -14,7 +16,7 @@ const createShortUrl = (req, res) => {
             return res.status(409).json({ message: "Shortcode already exists" });
         }
 
-        const expiryTime = dayjs().add(validity ?? 30, "minute").toISOString();
+        const expiryTime = dayjs().add(validity || 30, "minute").toISOString();
 
         urlDatabase[code] = {
             originalUrl: url,
@@ -40,7 +42,7 @@ const createShortUrl = (req, res) => {
             clientSecret
         });
     } catch (error) {
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
@@ -88,4 +90,4 @@ const getStats = (req, res) => {
     });
 };
 
-module.exports = { createShortUrl, redirectUrl,
+module.exports = { createShortUrl, redirectUrl, getStats };
